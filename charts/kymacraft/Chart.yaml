@@ -1,0 +1,20 @@
+apiVersion: v2
+name: resources
+description: Kymacraft resources
+version: 0.2.0
+appVersion: SeeValues
+keywords:
+  - minecraft
+  - server
+  - kyma
+sources:
+  - https://github.com/pPrecel/kymacraft-server
+home: https://kyma-project.io/
+maintainers:
+  - name: pPrecel
+    email: filip.strozik@sap.com
+
+dependencies:
+  - name: minecraft
+    version: "4.2.0"
+    repository: "https://itzg.github.io/minecraft-server-charts"

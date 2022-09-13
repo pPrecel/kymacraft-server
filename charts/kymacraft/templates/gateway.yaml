@@ -1,0 +1,21 @@
+apiVersion: networking.istio.io/v1beta1
+kind: Gateway
+metadata:
+  labels:
+    app: {{ template "kymacraft.fullname" . }}
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    release: "{{ .Release.Name }}"
+    heritage: "{{ .Release.Service }}"
+  name: {{ template "minecraft.fullname" . }}-gateway
+spec:
+  selector:
+    app: istio-ingressgateway
+    istio: ingressgateway
+  servers:
+  - hosts:
+    - "mc.{{ .Values.gateway.shootDomain }}"
+    - {{ template "minecraft.fullname" . }}.{{ .Values.gateway.shootDomain }}
+    port:
+      name: tcp
+      number: {{ .Values.minecraft.minecraftServer.servicePort }}
+      protocol: TCP

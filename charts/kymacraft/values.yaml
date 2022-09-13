@@ -1,0 +1,17 @@
+gateway:
+  shootDomain: "kyma.cluster.local" 
+
+minecraft:
+  image:
+    repository: itzg/minecraft-server
+    tag: latest
+  minecraftServer:
+    enabled: true
+    eula: false
+    servicePort: 25565
+    rcon:
+      password: "CHANGEMEPLS!!!"
+
+  persistence:
+    dataDir:
+      enabled: true

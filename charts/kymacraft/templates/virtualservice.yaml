@@ -1,0 +1,21 @@
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: {{ template "minecraft.fullname" . }}
+  labels:
+    app: {{ template "kymacraft.fullname" . }}
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    release: "{{ .Release.Name }}"
+    heritage: "{{ .Release.Service }}"
+spec:
+  gateways:
+  - {{ template "minecraft.fullname" . }}-gateway.{{ .Release.Namespace }}.svc.cluster.local
+  hosts:
+  - mc.{{ .Values.gateway.shootDomain }}
+  - {{ template "minecraft.fullname" . }}.{{ .Values.gateway.shootDomain }}
+  tcp:
+  - route:
+    - destination:
+        host: {{ template "minecraft.fullname" .Subcharts.minecraft }}.{{ .Subcharts.minecraft.Release.Namespace }}.svc.cluster.local
+        port:
+          number: {{ .Values.minecraft.minecraftServer.servicePort }}
