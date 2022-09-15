@@ -2,7 +2,7 @@
 
 >super fancy logo here
 
-This repository contains a showcase of the Minecraft server based on the [Kyma](https://github.com/kyma-project/kyma), the [Gardener](https://github.com/gardener/gardener) cluster, and the [docker-minecraft-server](https://github.com/itzg/docker-minecraft-server).
+This repository contains the Minecraft server config based on the [Kyma](https://github.com/kyma-project/kyma), the [Gardener](https://github.com/gardener/gardener) cluster, and the [docker-minecraft-server](https://github.com/itzg/docker-minecraft-server).
 
 ## Prerequisites
 
