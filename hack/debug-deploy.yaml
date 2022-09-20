@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: debug-deploy
+  namespace: kymacraft-system
+spec:
+  volumes:
+  - name: datadir
+    persistentVolumeClaim:
+      claimName: kymacraft-minecraft-datadir
+  containers:
+  - image: pprecel/kymacraft-helper:0.1.1
+    imagePullPolicy: Always
+    name: debug-deploy
+    command: ["sleep", "50000000000"]
+    resources: {}
+    volumeMounts:
+    - mountPath: /data
+      name: datadir
+  
+

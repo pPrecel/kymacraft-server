@@ -1,6 +1,17 @@
 gateway:
-  shootDomain: "kyma.cluster.local" 
+  enable: true
+  shootDomain: "kyma.cluster.local"
 
+backup:
+  enable: false
+  image:
+    repository: pprecel/kymacraft-helper
+    tag: "0.1.1"
+  schedule: "0 */2 * * *" # every 2h
+  modpackName: Kymacraft-Forge-Server-0.1.0
+  githubRepo:
+  sshKey:
+  
 minecraft:
   image:
     repository: itzg/minecraft-server

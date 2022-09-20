@@ -1,0 +1,111 @@
+{{- if .Values.backup.enable }}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ template "kymacraft.fullname" . }}-backup
+  labels:
+    app: {{ template "kymacraft.fullname" . }}
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    release: "{{ .Release.Name }}"
+    heritage: "{{ .Release.Service }}"
+spec:
+  schedule: "{{ .Values.backup.schedule }}"
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            sidecar.istio.io/inject: "false"
+        spec:
+          restartPolicy: OnFailure
+          volumes:
+          - name: cache
+            emptyDir: {}
+          - name: root
+            emptyDir: {}
+          - name: sshdir
+            emptyDir: {}
+          - name: datadir
+            persistentVolumeClaim:
+              claimName: {{ template "minecraft.fullname" .Subcharts.minecraft }}-datadir
+          - name: sshkey
+            secret:
+              secretName: {{ template "kymacraft.fullname" . }}-backup
+          containers:
+          - name: backup
+            image: "{{ .Values.backup.image.repository }}:{{ .Values.backup.image.tag }}"
+            imagePullPolicy: IfNotPresent
+            env:
+            - name: GITHUB_REPO
+              value: "{{ .Values.backup.githubRepo }}"
+            - name: MODPACK_NAME
+              value: "{{ .Values.backup.modpackName }}"
+            volumeMounts:
+            - mountPath: /data
+              name: datadir
+            - mountPath: /root/.ssh
+              name: sshdir
+            - mountPath: /root/cache
+              name: cache
+            - mountPath: /root/cache/sshkey
+              name: sshkey
+            - mountPath:  /root
+              name: root
+            command:
+            - /bin/sh
+            - -ec
+            - |
+                echo "starting ssh-agent"
+                eval "$(ssh-agent -s)"
+                git config --global user.email "bot@kymacraft.com"
+                git config --global user.name "kymacraftbot"
+
+                cat ~/cache/sshkey/ssh-key-github > ~/.ssh/ssh-key-github
+                chmod 600 ~/.ssh/ssh-key-github
+                
+                echo ""
+                echo "adding ssh key..."
+                bash -c 'ssh-add ~/.ssh/ssh-key-github'
+                ssh-keyscan -t rsa github.com >> ~/.ssh/known_hosts
+
+                echo ""
+                echo "clone repo..."
+                rm -rf ~/cache/repo
+                mkdir ~/cache/repo
+                git clone $GITHUB_REPO ~/cache/repo
+
+                echo ""
+                echo "preparing repo for new data..."
+                cd ~/cache/repo
+                rm -rf *
+
+                echo ""
+                echo "copying world..."
+                cp -r /data/FeedTheBeast/$MODPACK_NAME/world ./world
+
+                echo ""
+                echo "copying config..."
+                cp /data/FeedTheBeast/$MODPACK_NAME/usernamecache.json ./usernamecache.json
+                cp /data/FeedTheBeast/$MODPACK_NAME/whitelist.json ./whitelist.json
+                cp /data/FeedTheBeast/$MODPACK_NAME/usercache.json ./usercache.json
+                cp /data/FeedTheBeast/$MODPACK_NAME/user_jvm_args.txt ./user_jvm_args.txt
+                cp /data/FeedTheBeast/$MODPACK_NAME/server.properties ./server.properties
+                cp /data/FeedTheBeast/$MODPACK_NAME/ops.json ./ops.json
+                cp /data/FeedTheBeast/$MODPACK_NAME/banned-players.json ./banned-players.json
+                cp /data/FeedTheBeast/$MODPACK_NAME/banned-ips.json ./banned-ips.json
+                cp -r /data/FeedTheBeast/$MODPACK_NAME/logs ./logs
+
+                echo ""
+                echo "pushing changes..."
+                git add .
+                export TIMESTAMP=$(date +%Y-%m-%d/%H-%M-%S)
+
+                git commit --allow-empty -m "$TIMESTAMP"
+                git push origin main
+
+                git tag $TIMESTAMP
+                git push origin $TIMESTAMP
+                
+                echo ""
+                echo "DONE"
+{{- end -}}
