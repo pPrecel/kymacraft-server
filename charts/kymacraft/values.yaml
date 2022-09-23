@@ -6,29 +6,28 @@ backup:
   enable: false
   image:
     repository: pprecel/kymacraft-helper
-    tag: "0.1.1"
+    tag: "0.2.2"
   schedule: "0 */2 * * *" # every 2h
-  modpackName: Kymacraft-Forge-Server-0.1.0
   githubRepo:
   sshKey:
-  
+
 minecraft:
   image:
     repository: itzg/minecraft-server
     tag: "java17"
 
   livenessProbe:
-    initialDelaySeconds: 60
-    periodSeconds: 10
-    failureThreshold: 20
+    initialDelaySeconds: 120
+    periodSeconds: 20
+    failureThreshold: 40
     successThreshold: 1
-    timeoutSeconds: 2
+    timeoutSeconds: 4
   readinessProbe:
-    initialDelaySeconds: 60
-    periodSeconds: 10
-    failureThreshold: 20
+    initialDelaySeconds: 120
+    periodSeconds: 20
+    failureThreshold: 40
     successThreshold: 1
-    timeoutSeconds: 2
+    timeoutSeconds: 4
   startupProbe:
     enabled: false
     failureThreshold: 30
@@ -38,52 +37,21 @@ minecraft:
       requests:
         memory: 4000M
         cpu: 500m
-
-  extraVolumes:
-  - volumeMounts:
-    - name: modpack
-      mountPath: /modpack
-    volumes:
-    - name: modpack
-      emptyDir: {}
-
-  initContainers:
-  - name: fetch-modpack
-    image: pprecel/kymacraft-init:0.1.2
-    resources:
-      requests:
-        memory: 4000M
-        cpu: 500m
-    volumeMounts:
-    - name: datadir
-      mountPath: /data
-    - name: modpack
-      mountPath: /modpack
-    command: 
-    - sh
-    - -ec
-    - |
-      echo "init-container start..."
-      cd /tmp
-      git clone https://github.com/pPrecel/kymacraft-server
-      cd kymacraft-server
-      git lfs fetch
-      git lfs checkout
-
-      cp modpack/Kymacraft-Forge-Server-0.1.0.zip /modpack/Kymacraft-Forge-Server-0.1.0.zip
-      echo "modpacks cloned"
+      limits:
+        memory: 10000M
+        cpu: 1500m
 
   minecraftServer:
     enabled: true
     eula: false
     servicePort: 25565
     difficulty: normal
+    motd: "Welcome to Kymacraft Server!"
 
     type: "CURSEFORGE"
-    cfServerMod: "/modpack/Kymacraft-Forge-Server-0.1.0.zip"
-    rcon:
-      password: "CHANGEMEPLS!!!"
+    cfServerMod: "https://media.forgecdn.net/files/4001/108/Kymacraft-Server-1.1.0.zip"
 
   persistence:
     dataDir:
+      Size: 5Gi
       enabled: true
