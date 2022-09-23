@@ -4,6 +4,8 @@
 
 This repository contains the Minecraft server config based on the [Kyma](https://github.com/kyma-project/kyma), the [Gardener](https://github.com/gardener/gardener) cluster, and the [docker-minecraft-server](https://github.com/itzg/docker-minecraft-server).
 
+You can find the `Kymacraft` modpack and serverpack on the curseforge [here](https://www.curseforge.com/minecraft/modpacks/kymacraft).
+
 ## Prerequisites
 
 * Gardener cluster
