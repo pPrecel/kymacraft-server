@@ -1,4 +1,4 @@
-BACKUP ?= true
+BACKUP ?= false
 
 .PHONY: install
 install:
