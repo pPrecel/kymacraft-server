@@ -1,0 +1,73 @@
+{{- if .Values.backup.enable }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ template "kymacraft.fullname" . }}-fetcher
+  labels:
+    app: {{ template "kymacraft.fullname" . }}
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    release: "{{ .Release.Name }}"
+    heritage: "{{ .Release.Service }}"
+spec:
+  template:
+    metadata:
+      labels:
+        sidecar.istio.io/inject: "false"
+    spec:
+      securityContext:
+        runAsUser: 1000
+        fsGroup: 2000
+      restartPolicy: OnFailure
+      volumes:
+      - name: cache
+        emptyDir: {}
+      - name: datadir
+        persistentVolumeClaim:
+          claimName: {{ template "minecraft.fullname" .Subcharts.minecraft }}-datadir
+      - name: sshkey
+        secret:
+          secretName: {{ template "kymacraft.fullname" . }}-backup
+      containers:
+      - name: fetcher
+        image: "{{ .Values.backup.image.repository }}:{{ .Values.backup.image.tag }}"
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: GITHUB_REPO
+          value: "{{ .Values.backup.githubRepo }}"
+        volumeMounts:
+        - mountPath: /data
+          name: datadir
+        - mountPath: /cache
+          name: cache
+        - mountPath: /cache/sshkey
+          name: sshkey
+        command:
+        - /bin/sh
+        - -ec
+        - |
+            echo "starting ssh-agent"
+            eval "$(ssh-agent -s)"
+
+            mkdir ~/.ssh
+            cat /cache/sshkey/ssh-key-github > ~/.ssh/ssh-key-github
+            chmod 600 ~/.ssh/ssh-key-github
+            
+            echo ""
+            echo "adding ssh key..."
+            bash -c 'ssh-add ~/.ssh/ssh-key-github'
+            ssh-keyscan -t rsa github.com >> ~/.ssh/known_hosts
+
+            echo ""
+            echo "clone repo..."
+            rm -rf /cache/repo
+            mkdir -p /cache/repo
+            git clone $GITHUB_REPO /cache/repo
+
+            echo ""
+            echo "copying data..."
+            mkdir -p /data/FeedTheBeast/
+            cp -r /cache/repo/* /data/FeedTheBeast/
+            
+            echo ""
+            echo "DONE"
+{{- end -}}
